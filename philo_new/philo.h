@@ -52,8 +52,8 @@ typedef struct s_philo
     // int     *dead;
 	size_t start;
 	// pthread_mutex_t *last_meal_mutex;
-    pthread_mutex_t r_fork;
-    pthread_mutex_t l_fork;
+    pthread_mutex_t *r_fork;
+    pthread_mutex_t *l_fork;
     t_data  *data;
     // pthread_mutex_t *print;
 

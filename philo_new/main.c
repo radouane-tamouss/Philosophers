@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 
 size_t get_current_time(void)
 {
@@ -136,7 +138,6 @@ int monitor(t_philo *philos)
 					pthread_mutex_unlock(&philos[i].data->last_meal_mutex);
                     return (0);
 				}
-
 	            pthread_mutex_lock(&philos[i].data->dead_lock);
 				*(philos[i].data->dead) = 1;
 	            pthread_mutex_unlock(&philos[i].data->dead_lock);
@@ -156,6 +157,21 @@ int monitor(t_philo *philos)
 	}
 	return (0);
 }
+
+int check_if_dead(t_data *data)
+{
+    int stop;
+	pthread_mutex_lock(&data->dead_lock);
+    stop = *data->dead;
+	pthread_mutex_unlock(&data->dead_lock);
+    while(stop != 0)
+    {
+	    pthread_mutex_lock(&data->dead_lock);
+        stop = *data->dead;
+	    pthread_mutex_unlock(&data->dead_lock);
+    }
+    return (1);
+}
 void *routine(void *arg)
 {
 	t_philo *philo = (t_philo *)arg;
@@ -164,30 +180,36 @@ void *routine(void *arg)
 //		return NULL;
 	while(1)
 	{
-
 		if (philo->data->num_of_philos % 2 == 1)
 		{
 			if (philo->id % 2 == 1)
 				ft_usleep(50);
 		}
-		pthread_mutex_lock(&philo->l_fork);
+		pthread_mutex_lock(philo->l_fork);
 		if(ft_print(philo, "has taken a fork", YELLOW) == 1)
         {
-		    pthread_mutex_unlock(&philo->l_fork);
+		    pthread_mutex_unlock(philo->l_fork);
             return NULL;
         }
-		pthread_mutex_lock(&philo->r_fork);
+        if(philo->data->num_of_philos == 1)
+        {
+            printf("check if dead\n");
+           if (check_if_dead(philo->data) == 1)
+              return NULL;
+        } 
+        
+		pthread_mutex_lock(philo->r_fork);
 		if(ft_print(philo, "has taken a fork", YELLOW) == 1)
         {
-		    pthread_mutex_unlock(&philo->r_fork);
-		    pthread_mutex_unlock(&philo->l_fork);
+		    pthread_mutex_unlock(philo->r_fork);
+		    pthread_mutex_unlock(philo->l_fork);
             return NULL;
         }
 		
 		if(ft_print(philo, "is eating", GREEN) == 1)
         {
-		    pthread_mutex_unlock(&philo->r_fork);
-		    pthread_mutex_unlock(&philo->l_fork);
+		    pthread_mutex_unlock(philo->r_fork);
+		    pthread_mutex_unlock(philo->l_fork);
             return NULL;
         }
 		pthread_mutex_lock(&philo->data->last_meal_mutex);
@@ -197,8 +219,8 @@ void *routine(void *arg)
 		ft_usleep(philo->data->time_to_eat);
 		philo->nb_meals_eaten++;
 
-		pthread_mutex_unlock(&philo->r_fork);
-		pthread_mutex_unlock(&philo->l_fork);
+		pthread_mutex_unlock(philo->r_fork);
+		pthread_mutex_unlock(philo->l_fork);
 		// philo->eating = 0;
 		if(ft_print(philo, "is sleeping", WHITE) == 1)
             return NULL;
@@ -237,7 +259,6 @@ int main(int ac , char **av)
         return (printf("mutex_init failed\n"), 0);
     }
 	*data.dead = 0;
-	printf("%shello world\n", RED);
 	// data.print = malloc(sizeof(pthread_mutex_t));
 	if (pthread_mutex_init(&data.print, NULL) != 0)
 	{
@@ -280,13 +301,13 @@ int main(int ac , char **av)
 		philos[i].nb_meals_eaten = 0;
 		if(philos[i].id % 2)
 		{
-			philos[i].l_fork = forks[i];
-			philos[i].r_fork = forks[(i + 1) % ft_atoi(av[1])];
+			philos[i].l_fork = &forks[i];
+			philos[i].r_fork = &forks[(i + 1) % ft_atoi(av[1])];
 		}
 		else
 		{
-			philos[i].r_fork = forks[i];
-			philos[i].l_fork = forks[(i + 1) % ft_atoi(av[1])];
+			philos[i].r_fork = &forks[i];
+			philos[i].l_fork = &forks[(i + 1) % ft_atoi(av[1])];
 		}
 		philos[i].start = get_current_time();
 		if (pthread_create(&philos[i].thread, NULL, &routine, &philos[i]) != 0)
@@ -294,6 +315,7 @@ int main(int ac , char **av)
 		i++;	
 	}
 	monitor(philos);
+
 	if(*data.dead == 1)
     {
         if(pthread_mutex_destroy(&data.print) != 0)
@@ -303,12 +325,16 @@ int main(int ac , char **av)
        if( pthread_mutex_destroy(&data.dead_lock) != 0)
            printf("Failed to destroy dead_lock mutex\n");
         i = 0;
-	    while(i < ft_atoi(av[1]))
+	    while(i < data.num_of_philos)
 	    {
-		if (pthread_join(philos[i].thread, NULL) != 0)
-			return (printf("pthread_join failed\n"), 0);
-		i++;
+		    if (pthread_join(philos[i].thread, NULL) != 0)
+            {
+                printf("pthread_join failed\n");
+                return (0);
+            }
+		    i++;
 	    }
+        printf("number of philos is %d\n", ft_atoi(av[1]));
         // free(data.print);
         free(philos);
         free(data.forks);
@@ -319,13 +345,13 @@ int main(int ac , char **av)
     }
     
 
-	i = 0;
-	while(i < ft_atoi(av[1]))
-	{
-		if (pthread_join(philos[i].thread, NULL) != 0)
-			return (printf("pthread_join failed\n"), 0);
-		// printf("philosopher %d joined\n", i);
-		i++;
-	}
+//	i = 0;
+//	while(i < ft_atoi(av[1]))
+//	{
+//		if (pthread_join(philos[i].thread, NULL) != 0)
+//			return (printf("pthread_join failed\n"), 0);
+//		// printf("philosopher %d joined\n", i);
+//		i++;
+//	}
   return (0);
 }
