@@ -164,16 +164,10 @@ int check_if_dead(t_data *data)
 	pthread_mutex_lock(&data->dead_lock);
     stop = *data->dead;
 	pthread_mutex_unlock(&data->dead_lock);
-    //while(stop != 0)
-    while(1)
+    while(stop != 0)
     {
 	    pthread_mutex_lock(&data->dead_lock);
         stop = *data->dead;
-        if (stop == 1)
-        {
-	        pthread_mutex_unlock(&data->dead_lock);
-            return (1);
-        }
 	    pthread_mutex_unlock(&data->dead_lock);
     }
     return (1);
@@ -203,7 +197,10 @@ void *routine(void *arg)
         if(philo->data->num_of_philos == 1)
         {
            if (check_if_dead(philo->data) == 1)
+           {
+		      pthread_mutex_unlock(philo->l_fork);
               return NULL;
+           }
         } 
         
 		pthread_mutex_lock(philo->r_fork);
