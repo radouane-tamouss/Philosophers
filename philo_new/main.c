@@ -178,13 +178,16 @@ void *routine(void *arg)
 
 //	if (*philo->data->dead == 1)
 //		return NULL;
+//			if (philo->id % 2 == 1)
+ //       		ft_usleep(50);
 	while(1)
 	{
-		if (philo->data->num_of_philos % 2 == 1)
-		{
-			if (philo->id % 2 == 1)
-				ft_usleep(50);
-		}
+//		if (philo->data->num_of_philos % 2 == 1)
+//		{
+//			if (philo->id % 2 == 1)
+//				ft_usleep(50);
+//		}
+
 		pthread_mutex_lock(philo->l_fork);
 		if(ft_print(philo, "has taken a fork", YELLOW) == 1)
         {
@@ -227,7 +230,10 @@ void *routine(void *arg)
 		ft_usleep(philo->data->time_to_sleep);
 		if(ft_print(philo, "is thinking", CYAN) == 1)
             return NULL;
-		usleep(500);
+	//pthread_mutex_lock(&philo->data->last_meal_mutex);
+		ft_usleep((philo->data->time_to_die - (get_current_time() - philo->last_meal))/2); 
+    //	pthread_mutex_unlock(&philo->data->last_meal_mutex);
+	//	usleep(500);
 	}
 	return NULL;
 }
@@ -273,9 +279,9 @@ int main(int ac , char **av)
 	}
 	
     int i = 0;
-	printf("i = %d\n", i);
+	//printf("i = %d\n", i);
 	i = 0;
-	printf("number of forks %d\n", ft_atoi(av[1]));
+	//printf("number of forks %d\n", ft_atoi(av[1]));
     pthread_mutex_t *forks;
 	forks = malloc(sizeof(pthread_mutex_t) * ft_atoi(av[1]));
 	i = 0;
@@ -318,12 +324,12 @@ int main(int ac , char **av)
 
 	if(*data.dead == 1)
     {
-        if(pthread_mutex_destroy(&data.print) != 0)
-            printf("Failed to destroy print mutex\n");
-       if( pthread_mutex_destroy(&data.last_meal_mutex) != 0)
-           printf("Failed to destroy last meal mutex\n");
-       if( pthread_mutex_destroy(&data.dead_lock) != 0)
-           printf("Failed to destroy dead_lock mutex\n");
+      //  if(pthread_mutex_destroy(&data.print) != 0)
+       //     printf("Failed to destroy print mutex\n");
+      // if( pthread_mutex_destroy(&data.last_meal_mutex) != 0)
+       //    printf("Failed to destroy last meal mutex\n");
+      // if( pthread_mutex_destroy(&data.dead_lock) != 0)
+       //    printf("Failed to destroy dead_lock mutex\n");
         i = 0;
 	    while(i < data.num_of_philos)
 	    {
@@ -334,7 +340,7 @@ int main(int ac , char **av)
             }
 		    i++;
 	    }
-        printf("number of philos is %d\n", ft_atoi(av[1]));
+        //printf("number of philos is %d\n", ft_atoi(av[1]));
         // free(data.print);
         free(philos);
         free(data.forks);
@@ -343,15 +349,6 @@ int main(int ac , char **av)
         free(data.dead);
 		return (0);	
     }
-    
 
-//	i = 0;
-//	while(i < ft_atoi(av[1]))
-//	{
-//		if (pthread_join(philos[i].thread, NULL) != 0)
-//			return (printf("pthread_join failed\n"), 0);
-//		// printf("philosopher %d joined\n", i);
-//		i++;
-//	}
   return (0);
 }
