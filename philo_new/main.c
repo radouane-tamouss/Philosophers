@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rtamouss <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/04/26 22:12:15 by rtamouss          #+#    #+#             */
+/*   Updated: 2024/04/26 22:15:34 by rtamouss         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "philo.h"
 #include <stdio.h>
 #include <sys/time.h>
@@ -5,15 +17,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-size_t get_current_time(void)
+size_t  get_current_time(void)
 {
-	struct timeval time;
+	struct  timeval time;
+
 	if (gettimeofday(&time, NULL) == -1)
 		return (printf("gettimeofday failed\n"), 0);
 	return (time.tv_sec * 1000 + time.tv_usec / 1000);
 }
 
-int	ft_usleep(size_t milliseconds)
+int ft_usleep(size_t milliseconds)
 {
 	size_t	start;
 
@@ -23,7 +36,7 @@ int	ft_usleep(size_t milliseconds)
 	return (0);
 }
 
-int	ft_atoi(const char *str)
+int ft_atoi(const char *str)
 {
 	int		i;
 	int		sign;
@@ -54,26 +67,30 @@ int ft_check_if_string(char *str)
 	int i;
 
 	i = 0;
-	while(str[i])
+	while (str[i])
 	{
-		if( (str[i] >= '0' && str[i] <= '9') || ((str[i] == '+' || str[i] == '-') && (str[i+1] >= '0'&& str[i+1] <= '9')))
+		if((str[i] >= '0' && str[i] <= '9')
+                    || ((str[i] == '+' || str[i] == '-')
+                    && (str[i+1] >= '0'&& str[i+1] <= '9')))
 			i++;
 		else
 			return (0);
 	}	
 	return (1);
 }
+
 int ft_parsing(int ac, char **av)
 {
 	int 	i;
+
 	i = 1;
 	if (ft_atoi(av[i]) > 200)
 		return (0);
-	while(i < ac)
+	while (i < ac)
 	{
-		if(ft_check_if_string(av[i]) == 0)
+		if (ft_check_if_string(av[i]) == 0)
 			return(printf("Error: Arguments must contain only digits.\n"), 0);
-		if(ft_atoi(av[i]) <= 0)
+		if (ft_atoi(av[i]) <= 0)
         {
             if (av[1] <= 0)
                 return (printf("Error: You must have at least one philosopher.\n"), 0); 
@@ -87,20 +104,6 @@ int ft_parsing(int ac, char **av)
 	return (1);
 }
 
-void *ft_thinking(void *arg)
-{
-	t_philo *philo = (t_philo *)arg;
-	printf("%d is thinking\n",philo->id);
-	return NULL;
-}
-
-void *ft_sleeping(t_philo *philo)
-{
-	printf("%s%d is sleeping\n%s",WHITE,philo->id, DEFAULT);
-	ft_usleep(philo->data->time_to_sleep);
-	return NULL;
-}
-
 int ft_print(t_philo *philo, char *str, char *color)
 {
 	pthread_mutex_lock(&philo->data->dead_lock);
@@ -110,20 +113,20 @@ int ft_print(t_philo *philo, char *str, char *color)
         return (1);
     }
 	pthread_mutex_unlock(&philo->data->dead_lock);
-
 	pthread_mutex_lock(&philo->data->print);
-	// (void) color;
 	printf("%s%ld %d %s\n%s",color,get_current_time() - philo->start, philo->id + 1, str, DEFAULT);
-	// printf("%ld %d %s\n",get_current_time() - philo->start, philo->id + 1, str);
 	pthread_mutex_unlock(&philo->data->print);
     return (0);
 }
 
 int monitor(t_philo *philos)
 {
-	while(1)
+    int i;
+    int eaten;
+
+	while (1)
 	{
-		int i = 0;
+		i = 0;
 		while(i < philos->data->num_of_philos)
 		{
 			pthread_mutex_lock(&philos[i].data->last_meal_mutex);
@@ -145,7 +148,7 @@ int monitor(t_philo *philos)
 		}
 		
         i = 0;
-        int eaten = 0;
+        eaten = 0;
         while(i < philos->data->num_of_philos)
         {
 			pthread_mutex_lock(&philos[i].data->nb_meals_eaten_mutex);
