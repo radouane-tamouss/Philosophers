@@ -98,13 +98,25 @@ void *ft_sleeping(t_philo *philo)
 	return NULL;
 }
 
-void ft_print(t_philo *philo, char *str, char *color)
+int ft_print(t_philo *philo, char *str, char *color)
 {
+	(void) color;
+	pthread_mutex_lock(philo->data->dead_lock);
+    if (*philo->data->dead == 1)
+    {
+
+    	pthread_mutex_unlock(philo->data->dead_lock);
+        return (1);
+    }
+	pthread_mutex_unlock(philo->data->dead_lock);
+
 	pthread_mutex_lock(philo->data->print);
 	// (void) color;
-	printf("%s%ld %d %s\n%s",color,get_current_time() - philo->start, philo->id + 1, str, DEFAULT);
+	// printf("%s%ld %d %s\n%s",color,get_current_time() - philo->start, philo->id + 1, str, DEFAULT);
+	printf("%ld %d %s\n",get_current_time() - philo->start, philo->id + 1, str);
 	// printf("%ld %d %s\n",get_current_time() - philo->start, philo->id + 1, str);
 	pthread_mutex_unlock(philo->data->print);
+    return (0);
 }
 
 int monitor(t_philo *philos)
@@ -117,15 +129,20 @@ int monitor(t_philo *philos)
 			pthread_mutex_lock(philos[i].data->last_meal_mutex);
 			if ((get_current_time() - philos[i].last_meal > philos[i].data->time_to_die) && philos[i].eating == 0)
 			{
-				printf("id of philo is %d\nlast meal time = %zu\ncurrent time : %zu\ntime - last meal : %zu <> %zu\n",philos[i].id + 1, philos[i].last_meal - philos[i].start,get_current_time() - philos[i].start, get_current_time() - philos[i].start - philos[i].last_meal, (size_t)philos[i].data->time_to_die);
-				printf("id of philo is : %d\n", philos[i].id + 1);
-				printf("philos last meal = %zu\n", philos[i].last_meal);
-				printf("current time : %zu\n", get_current_time());
-				printf("time - last meal : %zu <> %zu\n", get_current_time() - philos[i].last_meal, (size_t)philos[i].data->time_to_die);
-				ft_print(&philos[i], "died", RED);
-				*(philos[i].data->dead) = 1;
+		//		printf("id of philo is %d\nlast meal time = %zu\ncurrent time : %zu\ntime - last meal : %zu <> %zu\n",philos[i].id + 1, philos[i].last_meal - philos[i].start,get_current_time() - philos[i].start, get_current_time() - philos[i].start - philos[i].last_meal, (size_t)philos[i].data->time_to_die);
+		//		printf("id of philo is : %d\n", philos[i].id + 1);
+		//		printf("philos last meal = %zu\n", philos[i].last_meal);
+		//		printf("current time : %zu\n", get_current_time());
+		//		printf("time - last meal : %zu <> %zu\n", get_current_time() - philos[i].last_meal, (size_t)philos[i].data->time_to_die);
+				if (ft_print(&philos[i], "died", RED) == 1)
+                    return (0);
+
 				pthread_mutex_unlock(philos[i].data->last_meal_mutex);
-				return (1);
+	            pthread_mutex_lock(philos[i].data->dead_lock);
+				*(philos[i].data->dead) = 1;
+	            pthread_mutex_unlock(philos[i].data->dead_lock);
+                return (0);
+				//return (1);
 			}
 			pthread_mutex_unlock(philos[i].data->last_meal_mutex);
 			i++;
@@ -143,22 +160,36 @@ void *routine(void *arg)
 {
 	t_philo *philo = (t_philo *)arg;
 
+//	if (*philo->data->dead == 1)
+//		return NULL;
 	while(1)
 	{
 
-		if (*philo->data->dead == 1)
-			return NULL;
 		if (philo->data->num_of_philos % 2 == 1)
 		{
 			if (philo->id % 2 == 1)
 				ft_usleep(50);
 		}
 		pthread_mutex_lock(philo->l_fork);
-		ft_print(philo, "has taken a fork", YELLOW);
+		if(ft_print(philo, "has taken a fork", YELLOW) == 1)
+        {
+		    pthread_mutex_unlock(philo->l_fork);
+            return NULL;
+        }
 		pthread_mutex_lock(philo->r_fork);
-		ft_print(philo, "has taken a fork", YELLOW);
+		if(ft_print(philo, "has taken a fork", YELLOW) == 1)
+        {
+		    pthread_mutex_unlock(philo->r_fork);
+		    pthread_mutex_unlock(philo->l_fork);
+            return NULL;
+        }
 		
-		ft_print(philo, "is eating", GREEN);
+		if(ft_print(philo, "is eating", GREEN) == 1)
+        {
+		    pthread_mutex_unlock(philo->r_fork);
+		    pthread_mutex_unlock(philo->l_fork);
+            return NULL;
+        }
 		pthread_mutex_lock(philo->data->last_meal_mutex);
 		philo->last_meal = get_current_time();
 		pthread_mutex_unlock(philo->data->last_meal_mutex);
@@ -169,13 +200,16 @@ void *routine(void *arg)
 		pthread_mutex_unlock(philo->r_fork);
 		pthread_mutex_unlock(philo->l_fork);
 		philo->eating = 0;
-		ft_print(philo, "is sleeping", WHITE);
+		if(ft_print(philo, "is sleeping", WHITE) == 1)
+            return NULL;
 		ft_usleep(philo->data->time_to_sleep);
-		ft_print(philo, "is thinking", CYAN);
+		if(ft_print(philo, "is thinking", CYAN) == 1)
+            return NULL;
 		usleep(500);
 	}
 	return NULL;
 }
+
 int main(int ac , char **av)
 {
   if(ac != 5 && ac != 6)
@@ -185,8 +219,8 @@ int main(int ac , char **av)
 		printf("Error try to provide valid args!\n");	
 		return (0);
  	}
-	if(av[5] != NULL)
-		printf("numer of times each philosopher must eat: %d\n", ft_atoi(av[5]));
+	// if(av[5] != NULL)
+	// 	printf("numer of times each philosopher must eat: %d\n", ft_atoi(av[5]));
     t_philo *philos = malloc(sizeof(t_philo) * ft_atoi(av[1]));
 	t_data data;
 	data.num_of_philos = ft_atoi(av[1]);
@@ -197,6 +231,11 @@ int main(int ac , char **av)
 	if(av[5] != NULL)
 		data.num_times_to_eat = ft_atoi(av[5]);
 	data.dead = malloc(sizeof(int));
+    data.dead_lock = malloc(sizeof(pthread_mutex_t));
+    if (pthread_mutex_init(data.dead_lock, NULL) != 0)
+    {
+        return (printf("mutex_init failed\n"), 0);
+    }
 	*data.dead = 0;
 	data.print = malloc(sizeof(pthread_mutex_t));
 	if (pthread_mutex_init(data.print, NULL) != 0)
@@ -212,9 +251,7 @@ int main(int ac , char **av)
 	}
 	
     int i = 0;
-	printf("i = %d\n", i);
 	i = 0;
-	printf("number of forks %d\n", ft_atoi(av[1]));
     pthread_mutex_t *forks;
 	forks = malloc(sizeof(pthread_mutex_t) * ft_atoi(av[1]));
 	i = 0;
@@ -225,7 +262,6 @@ int main(int ac , char **av)
 			printf("mutex_init failed\n");
 			return 0;
 		}
-		// printf("forks[%d] = %p\n", i, &forks[i]);
 		i++;
 	}
 	data.forks = forks;
@@ -233,17 +269,12 @@ int main(int ac , char **av)
 	i = 0;
 	while(i < ft_atoi(av[1]))
 	{
+        
 		philos[i].id = i;
-		// philos[i].time_to_die = ft_atoi(av[2]);
-		// philos[i].time_to_eat = ft_atoi(av[3]);
-		// philos[i].time_to_sleep = ft_atoi(av[4]);
 		philos[i].last_meal = get_current_time();
 		philos[i].eating = 0;
 		philos[i].data = &data;
 		philos[i].nb_meals_eaten = 0;
-		// philos[i].num_of_philos = ft_atoi(av[1]);
-		// philos[i].dead = malloc(sizeof(int));
-		// *philos[i].dead = 0;
 		if(philos[i].id % 2)
 		{
 			philos[i].l_fork = &forks[i];
@@ -254,35 +285,36 @@ int main(int ac , char **av)
 			philos[i].r_fork = &forks[i];
 			philos[i].l_fork = &forks[(i + 1) % ft_atoi(av[1])];
 		}
-		// philos[i].print = malloc(sizeof(pthread_mutex_t));
-		// philos[i].last_meal_mutex = malloc(sizeof(pthread_mutex_t));
-		// if (pthread_mutex_init(philos[i].print, NULL) != 0)
-		// {
-		// 	printf("mutex_init failed\n");
-		// 	return 0;
-		// }
-		// if (pthread_mutex_init(philos[i].last_meal_mutex, NULL) != 0)
-		// {
-		// 	printf("mutex_init failed\n");
-		// 	return 0;
-		// }
-		// if(av[5] != NULL)
-		// 	philos[i].num_times_to_eat= ft_atoi(av[5]);
 		philos[i].start = get_current_time();
-		if(*philos->data->dead == 1)
-			break;
 		if (pthread_create(&philos[i].thread, NULL, &routine, &philos[i]) != 0)
 			return (printf("pthread_create failed\n"), 0);
 		i++;	
 	}
-	// if (monitor(philos) == 1)
-	// 	return (0);
-	// -------------------------------------------------------------------
-	// ------------------------------------------------
-	// i = 1;
-	// pthread_t *monitor = malloc(sizeof(pthread_t));
-	// if (pthread_create(monitor, NULL, &routine, &philos[i]) != 0)
-	// 	return (printf("pthread_create failed\n"), 0);
+	monitor(philos);
+	if(*data.dead == 1)
+    {
+        if(pthread_mutex_destroy(data.print) != 0)
+            printf("Failed to destroy mutex\n");
+       if( pthread_mutex_destroy(data.last_meal_mutex) != 0)
+           printf("Failed to destroy mutex\n");
+       if( pthread_mutex_destroy(data.dead_lock) != 0)
+           printf("Failed to destroy mutex\n");
+        i = 0;
+	    while(i < ft_atoi(av[1]))
+	    {
+		if (pthread_join(philos[i].thread, NULL) != 0)
+			return (printf("pthread_join failed\n"), 0);
+		i++;
+	    }
+        free(data.print);
+        free(philos);
+        free(data.forks);
+        free(data.dead_lock);
+        free(data.last_meal_mutex);
+        free(data.dead);
+		return (0);	
+    }
+    
 
 	i = 0;
 	while(i < ft_atoi(av[1]))
@@ -292,8 +324,5 @@ int main(int ac , char **av)
 		// printf("philosopher %d joined\n", i);
 		i++;
 	}
-	// if (pthread_join(*monitor, NULL) != 0)
-	// 	return (printf("pthread_join failed\n"), 0);
-	// printf("monitor joined\n");	
   return (0);
 }

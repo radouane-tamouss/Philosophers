@@ -32,6 +32,7 @@ typedef struct s_data
     size_t  start;
     pthread_mutex_t *forks;
     pthread_mutex_t *print;
+    pthread_mutex_t *dead_lock;
     // pthread_mutex_t print;
     pthread_mutex_t *last_meal_mutex;
 } t_data;
