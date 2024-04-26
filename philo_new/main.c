@@ -72,17 +72,18 @@ int ft_parsing(int ac, char **av)
 	while(i < ac)
 	{
 		if(ft_check_if_string(av[i]) == 0)
-			return(printf("contains other chars , no numbers\n"), 0);
-		if(ft_atoi(av[i]) < 0)
-			return (printf("atoi failed less than 0\n"), 0);
+			return(printf("Error: Arguments must contain only digits.\n"), 0);
+		if(ft_atoi(av[i]) <= 0)
+        {
+            if (av[1] <= 0)
+                return (printf("Error: You must have at least one philosopher.\n"), 0); 
+            else
+                return (printf("Invalid arguments!\n"), 0);
+        }
 		if (ft_atoi(av[1]) > 200)
-			return (printf("try to give a number of philos less than 200\n"), 0);
+			return (printf("Error: The entered philosopher count exceeds the program's capacity\n"), 0);
 		i++;
 	}
-    if (ft_atoi(av[1]) < 1)
-    {
-        return (printf("must be at least one philosopher\n"), 0);
-    }
 	return (1);
 }
 
@@ -185,19 +186,8 @@ int check_if_dead(t_data *data)
 void *routine(void *arg)
 {
 	t_philo *philo = (t_philo *)arg;
-
-//	if (*philo->data->dead == 1)
-//		return NULL;
-//			if (philo->id % 2 == 1)
- //       		ft_usleep(50);
 	while(1)
 	{
-//		if (philo->data->num_of_philos % 2 == 1)
-//		{
-//			if (philo->id % 2 == 1)
-//				ft_usleep(50);
-//		}
-
 		pthread_mutex_lock(philo->l_fork);
 		if(ft_print(philo, "has taken a fork", YELLOW) == 1)
         {
@@ -230,7 +220,6 @@ void *routine(void *arg)
 		pthread_mutex_lock(&philo->data->last_meal_mutex);
 		philo->last_meal = get_current_time();
 		pthread_mutex_unlock(&philo->data->last_meal_mutex);
-		// philo->eating = 1;
 		ft_usleep(philo->data->time_to_eat);
 
         pthread_mutex_lock(&philo->data->nb_meals_eaten_mutex);
@@ -239,15 +228,12 @@ void *routine(void *arg)
         
 		pthread_mutex_unlock(philo->r_fork);
 		pthread_mutex_unlock(philo->l_fork);
-		// philo->eating = 0;
 		if(ft_print(philo, "is sleeping", WHITE) == 1)
             return NULL;
 		ft_usleep(philo->data->time_to_sleep);
 		if(ft_print(philo, "is thinking", CYAN) == 1)
             return NULL;
 		ft_usleep((philo->data->time_to_die - (get_current_time() - philo->last_meal))/2); 
-    //	pthread_mutex_unlock(&philo->data->last_meal_mutex);
-	//	usleep(500);
 	}
 	return NULL;
 }
