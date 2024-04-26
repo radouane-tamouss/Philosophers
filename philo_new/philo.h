@@ -33,6 +33,7 @@ typedef struct s_data
     pthread_mutex_t *forks;
     pthread_mutex_t print;
     pthread_mutex_t dead_lock;
+    pthread_mutex_t nb_meals_eaten_mutex;
     // pthread_mutex_t print;
     pthread_mutex_t last_meal_mutex;
 } t_data;
@@ -43,6 +44,7 @@ typedef struct s_philo
     int     eating;
     int     nb_meals_eaten;
     size_t  last_meal;
+    int finished;
     // size_t  time_to_eat;
     // size_t  time_to_die;
     // size_t  time_to_sleep;
