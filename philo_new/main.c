@@ -164,10 +164,16 @@ int check_if_dead(t_data *data)
 	pthread_mutex_lock(&data->dead_lock);
     stop = *data->dead;
 	pthread_mutex_unlock(&data->dead_lock);
-    while(stop != 0)
+    //while(stop != 0)
+    while(1)
     {
 	    pthread_mutex_lock(&data->dead_lock);
         stop = *data->dead;
+        if (stop == 1)
+        {
+	        pthread_mutex_unlock(&data->dead_lock);
+            return (1);
+        }
 	    pthread_mutex_unlock(&data->dead_lock);
     }
     return (1);
@@ -196,7 +202,6 @@ void *routine(void *arg)
         }
         if(philo->data->num_of_philos == 1)
         {
-            printf("check if dead\n");
            if (check_if_dead(philo->data) == 1)
               return NULL;
         } 
@@ -324,12 +329,6 @@ int main(int ac , char **av)
 
 	if(*data.dead == 1)
     {
-      //  if(pthread_mutex_destroy(&data.print) != 0)
-       //     printf("Failed to destroy print mutex\n");
-      // if( pthread_mutex_destroy(&data.last_meal_mutex) != 0)
-       //    printf("Failed to destroy last meal mutex\n");
-      // if( pthread_mutex_destroy(&data.dead_lock) != 0)
-       //    printf("Failed to destroy dead_lock mutex\n");
         i = 0;
 	    while(i < data.num_of_philos)
 	    {
@@ -340,6 +339,12 @@ int main(int ac , char **av)
             }
 		    i++;
 	    }
+        if(pthread_mutex_destroy(&data.print) != 0)
+           printf("Failed to destroy print mutex\n");
+       if( pthread_mutex_destroy(&data.last_meal_mutex) != 0)
+          printf("Failed to destroy last meal mutex\n");
+       if( pthread_mutex_destroy(&data.dead_lock) != 0)
+          printf("Failed to destroy dead_lock mutex\n");
         //printf("number of philos is %d\n", ft_atoi(av[1]));
         // free(data.print);
         free(philos);
