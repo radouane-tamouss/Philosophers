@@ -1,7 +1,7 @@
 CC = cc
 CFLAGS = -Wall -Wextra -Werror #-pthread
 
-SRCS = main.c
+SRCS = main.c parsing.c monitor.c routine.c init_data.c utils.c
 OBJS = ${SRCS:.c=.o}
 
 NAME = philo
