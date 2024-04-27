@@ -6,7 +6,7 @@
 /*   By: rtamouss <rtamouss@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/27 18:18:56 by rtamouss          #+#    #+#             */
-/*   Updated: 2024/04/27 19:36:53 by rtamouss         ###   ########.fr       */
+/*   Updated: 2024/04/27 21:58:40 by rtamouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,7 +158,6 @@ int	check_if_dead_by_monitor(t_philo *philos)
 				return (1);
 			}
 			pthread_mutex_lock(&philos[i].data->dead_lock);
-			// *(philos[i].data->dead) = 1;
 			philos[i].data->dead = 1;
 			pthread_mutex_unlock(&philos[i].data->dead_lock);
 			pthread_mutex_unlock(&philos[i].data->last_meal_mutex);
@@ -273,7 +272,7 @@ void	print_usage(void)
 		RED "Please try again with the correct arguments.\n" DEFAULT);
 }
 
-void init_data(t_data *data, char **av)
+void	init_data(t_data *data, char **av)
 {
 	data->num_of_philos = ft_atoi(av[1]);
 	data->time_to_die = ft_atoi(av[2]);
@@ -286,7 +285,7 @@ void init_data(t_data *data, char **av)
 	data->dead = 0;
 }
 
-int init_mutexes(t_data *data, pthread_mutex_t *forks, int num_philos)
+int	init_mutexes(t_data *data, pthread_mutex_t *forks, int num_philos)
 {
 	int	i;
 
@@ -308,9 +307,9 @@ int init_mutexes(t_data *data, pthread_mutex_t *forks, int num_philos)
 	return (0);
 }
 
-int initialize_philos_and_start(t_philo *philos, t_data *data, pthread_mutex_t *forks, int num_philos)
+int	initialize_philos_and_start(t_philo *philos, t_data *data, int num_philos)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	while (i < num_philos)
@@ -321,13 +320,13 @@ int initialize_philos_and_start(t_philo *philos, t_data *data, pthread_mutex_t *
 		philos[i].nb_meals_eaten = 0;
 		if (philos[i].id % 2)
 		{
-			philos[i].l_fork = &forks[i];
-			philos[i].r_fork = &forks[(i + 1) % num_philos];
+			philos[i].l_fork = &data->forks[i];
+			philos[i].r_fork = &data->forks[(i + 1) % num_philos];
 		}
 		else
 		{
-			philos[i].r_fork = &forks[i];
-			philos[i].l_fork = &forks[(i + 1) % num_philos];
+			philos[i].r_fork = &data->forks[i];
+			philos[i].l_fork = &data->forks[(i + 1) % num_philos];
 		}
 		philos[i].start = get_current_time();
 		if (pthread_create(&philos[i].thread, NULL, &routine, &philos[i]) != 0)
@@ -336,7 +335,8 @@ int initialize_philos_and_start(t_philo *philos, t_data *data, pthread_mutex_t *
 	}
 	return (0);
 }
-int ft_free_and_join(t_data *data, t_philo *philos)
+
+int	ft_free_and_join(t_data *data, t_philo *philos)
 {
 	int	i;
 
@@ -364,6 +364,7 @@ int ft_free_and_join(t_data *data, t_philo *philos)
 	}
 	return (0);
 }
+
 int	main(int ac, char **av)
 {
 	t_philo			*philos;
@@ -386,7 +387,7 @@ int	main(int ac, char **av)
 	if (init_mutexes(&data, forks, num_philos) == 1)
 		return (0);
 	data.forks = forks;
-	if (initialize_philos_and_start(philos, &data, forks ,num_philos) == 1)
+	if (initialize_philos_and_start(philos, &data, num_philos) == 1)
 		return (0);
 	monitor(philos);
 	ft_free_and_join(&data, philos);
