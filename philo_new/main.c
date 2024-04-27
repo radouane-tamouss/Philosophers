@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rtamouss <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: rtamouss <rtamouss@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/26 22:12:15 by rtamouss          #+#    #+#             */
-/*   Updated: 2024/04/26 22:15:34 by rtamouss         ###   ########.fr       */
+/*   Updated: 2024/04/27 16:32:55 by rtamouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,16 +17,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-size_t  get_current_time(void)
+size_t	get_current_time(void)
 {
-	struct  timeval time;
+	struct timeval	time;
 
 	if (gettimeofday(&time, NULL) == -1)
 		return (printf("gettimeofday failed\n"), 0);
 	return (time.tv_sec * 1000 + time.tv_usec / 1000);
 }
 
-int ft_usleep(size_t milliseconds)
+int	ft_usleep(size_t milliseconds)
 {
 	size_t	start;
 
@@ -36,7 +36,7 @@ int ft_usleep(size_t milliseconds)
 	return (0);
 }
 
-int ft_atoi(const char *str)
+int	ft_atoi(const char *str)
 {
 	int		i;
 	int		sign;
@@ -62,180 +62,186 @@ int ft_atoi(const char *str)
 	return (res);
 }
 
-int ft_check_if_string(char *str)
+int	ft_check_if_string(char *str)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	while (str[i])
 	{
-		if((str[i] >= '0' && str[i] <= '9')
-                    || ((str[i] == '+' || str[i] == '-')
-                    && (str[i+1] >= '0'&& str[i+1] <= '9')))
+		if ((str[i] >= '0' && str[i] <= '9')
+			|| ((str[i] == '+' || str[i] == '-')
+				&& (str[i + 1] >= '0' && str[i + 1] <= '9')))
 			i++;
 		else
 			return (0);
-	}	
+	}
 	return (1);
 }
 
-int ft_parsing(int ac, char **av)
+int	ft_parsing(int ac, char **av)
 {
-	int 	i;
+	int	i;
 
 	i = 1;
-	if (ft_atoi(av[i]) > 200)
+	if (ft_atoi(av[ac - 1]) == 0 && ac == 6)
 		return (0);
 	while (i < ac)
 	{
 		if (ft_check_if_string(av[i]) == 0)
-			return(printf("Error: Arguments must contain only digits.\n"), 0);
+			return (printf("Error: Arguments must contain only digits.\n"), 0);
 		if (ft_atoi(av[i]) <= 0)
-        {
-            if (av[1] <= 0)
-                return (printf("Error: You must have at least one philosopher.\n"), 0); 
-            else
-                return (printf("Invalid arguments!\n"), 0);
-        }
+		{
+			printf("Error\n");
+			if (av[1] == 0)
+				return (printf("You must have at least one philosopher.\n"), 0);
+			else
+				return (printf("Invalid args! Try to enter valid args!\n"), 0);
+		}
 		if (ft_atoi(av[1]) > 200)
-			return (printf("Error: The entered philosopher count exceeds the program's capacity\n"), 0);
+			return (printf("The entered philosopher count too big!\n"), 0);
 		i++;
 	}
 	return (1);
 }
 
-int ft_print(t_philo *philo, char *str, char *color)
+int	ft_print(t_philo *philo, char *str, char *color)
 {
 	pthread_mutex_lock(&philo->data->dead_lock);
-    if (*philo->data->dead == 1)
-    {
-    	pthread_mutex_unlock(&philo->data->dead_lock);
-        return (1);
-    }
+	if (*philo->data->dead == 1)
+	{
+		pthread_mutex_unlock(&philo->data->dead_lock);
+		return (1);
+	}
 	pthread_mutex_unlock(&philo->data->dead_lock);
 	pthread_mutex_lock(&philo->data->print);
-	printf("%s%ld %d %s\n%s",color,get_current_time() - philo->start, philo->id + 1, str, DEFAULT);
+	printf("%s%ld %d %s\n%s", color,
+		get_current_time() - philo->start, philo->id + 1, str, DEFAULT);
 	pthread_mutex_unlock(&philo->data->print);
-    return (0);
+	return (0);
 }
 
-int monitor(t_philo *philos)
+int	monitor(t_philo *philos)
 {
-    int i;
-    int eaten;
+	int	i;
+	int	eaten;
 
 	while (1)
 	{
 		i = 0;
-		while(i < philos->data->num_of_philos)
+		while (i < philos->data->num_of_philos)
 		{
 			pthread_mutex_lock(&philos[i].data->last_meal_mutex);
-			if ((get_current_time() - philos[i].last_meal > philos[i].data->time_to_die))
+			if ((get_current_time() - philos[i].last_meal
+					> philos[i].data->time_to_die))
 			{
 				if (ft_print(&philos[i], "died", RED) == 1)
 				{
 					pthread_mutex_unlock(&philos[i].data->last_meal_mutex);
-                    return (0);
+					return (0);
 				}
-	            pthread_mutex_lock(&philos[i].data->dead_lock);
+				pthread_mutex_lock(&philos[i].data->dead_lock);
 				*(philos[i].data->dead) = 1;
-	            pthread_mutex_unlock(&philos[i].data->dead_lock);
+				pthread_mutex_unlock(&philos[i].data->dead_lock);
 				pthread_mutex_unlock(&philos[i].data->last_meal_mutex);
-                return (1);
+				return (1);
 			}
 			pthread_mutex_unlock(&philos[i].data->last_meal_mutex);
 			i++;
 		}
-		
-        i = 0;
-        eaten = 0;
-        while(i < philos->data->num_of_philos)
-        {
+		i = 0;
+		eaten = 0;
+		while (i < philos->data->num_of_philos)
+		{
 			pthread_mutex_lock(&philos[i].data->nb_meals_eaten_mutex);
-	    	if (philos[i].data->num_times_to_eat != -1 && philos[i].nb_meals_eaten >= philos[i].data->num_times_to_eat)
-	    	{
-	            pthread_mutex_lock(&philos[i].data->dead_lock);
-                eaten++;
-	            pthread_mutex_unlock(&philos[i].data->dead_lock);
-	    	}
+			if (philos[i].data->num_times_to_eat != -1
+				&& philos[i].nb_meals_eaten >= philos[i].data->num_times_to_eat)
+			{
+				pthread_mutex_lock(&philos[i].data->dead_lock);
+				eaten++;
+				pthread_mutex_unlock(&philos[i].data->dead_lock);
+			}
 			pthread_mutex_unlock(&philos[i].data->nb_meals_eaten_mutex);
-            i++;
-        }
-        if (eaten == philos->data->num_of_philos)
-        {
-	            pthread_mutex_lock(&philos->data->dead_lock);
-				*(philos->data->dead) = 1;
-	            pthread_mutex_unlock(&philos->data->dead_lock);
-        }
-
+			i++;
+		}
+		if (eaten == philos->data->num_of_philos)
+		{
+			pthread_mutex_lock(&philos->data->dead_lock);
+			*(philos->data->dead) = 1;
+			pthread_mutex_unlock(&philos->data->dead_lock);
+		}
 	}
 	return (0);
 }
 
-int check_if_dead(t_data *data)
+int	check_if_dead(t_data *data)
 {
-    int stop;
-	pthread_mutex_lock(&data->dead_lock);
-    stop = *data->dead;
-	pthread_mutex_unlock(&data->dead_lock);
-    while(stop != 0)
-    {
-	    pthread_mutex_lock(&data->dead_lock);
-        stop = *data->dead;
-	    pthread_mutex_unlock(&data->dead_lock);
-    }
-    return (1);
+	int	stop;
+
+	pthread_mutex_lock (&data->dead_lock);
+	stop = *data->dead;
+	pthread_mutex_unlock (&data->dead_lock);
+	while (stop != 0)
+	{
+		pthread_mutex_lock (&data->dead_lock);
+		stop = *data->dead;
+		pthread_mutex_unlock (&data->dead_lock);
+	}
+	return (1);
 }
-void *routine(void *arg)
+
+void	*routine(void *arg)
 {
-	t_philo *philo = (t_philo *)arg;
+	t_philo	*philo;
+	
+	philo = (t_philo *)arg;
 	while(1)
 	{
 		pthread_mutex_lock(philo->l_fork);
 		if(ft_print(philo, "has taken a fork", YELLOW) == 1)
-        {
-		    pthread_mutex_unlock(philo->l_fork);
-            return NULL;
-        }
-        if(philo->data->num_of_philos == 1)
-        {
-           if (check_if_dead(philo->data) == 1)
-           {
-		      pthread_mutex_unlock(philo->l_fork);
-              return NULL;
-           }
-        } 
-        
+		{
+			pthread_mutex_unlock(philo->l_fork);
+			return NULL;
+		}
+		if(philo->data->num_of_philos == 1)
+		{
+		   if (check_if_dead(philo->data) == 1)
+		   {
+			  pthread_mutex_unlock(philo->l_fork);
+			  return NULL;
+		   }
+		} 
+		
 		pthread_mutex_lock(philo->r_fork);
 		if(ft_print(philo, "has taken a fork", YELLOW) == 1)
-        {
-		    pthread_mutex_unlock(philo->r_fork);
-		    pthread_mutex_unlock(philo->l_fork);
-            return NULL;
-        }
+		{
+			pthread_mutex_unlock(philo->r_fork);
+			pthread_mutex_unlock(philo->l_fork);
+			return NULL;
+		}
 		
 		if(ft_print(philo, "is eating", GREEN) == 1)
-        {
-		    pthread_mutex_unlock(philo->r_fork);
-		    pthread_mutex_unlock(philo->l_fork);
-            return NULL;
-        }
+		{
+			pthread_mutex_unlock(philo->r_fork);
+			pthread_mutex_unlock(philo->l_fork);
+			return NULL;
+		}
 		pthread_mutex_lock(&philo->data->last_meal_mutex);
 		philo->last_meal = get_current_time();
 		pthread_mutex_unlock(&philo->data->last_meal_mutex);
 		ft_usleep(philo->data->time_to_eat);
 
-        pthread_mutex_lock(&philo->data->nb_meals_eaten_mutex);
+		pthread_mutex_lock(&philo->data->nb_meals_eaten_mutex);
 		philo->nb_meals_eaten++;
-        pthread_mutex_unlock(&philo->data->nb_meals_eaten_mutex);
-        
+		pthread_mutex_unlock(&philo->data->nb_meals_eaten_mutex);
+		
 		pthread_mutex_unlock(philo->r_fork);
 		pthread_mutex_unlock(philo->l_fork);
 		if(ft_print(philo, "is sleeping", WHITE) == 1)
-            return NULL;
+			return NULL;
 		ft_usleep(philo->data->time_to_sleep);
 		if(ft_print(philo, "is thinking", CYAN) == 1)
-            return NULL;
+			return NULL;
 		ft_usleep((philo->data->time_to_die - (get_current_time() - philo->last_meal))/2); 
 	}
 	return NULL;
@@ -243,33 +249,31 @@ void *routine(void *arg)
 
 int main(int ac , char **av)
 {
-  if(ac != 5 && ac != 6)
-    return (0);
- 	if(ft_parsing(ac, av) == 0)
- 	{
-		printf("Error try to provide valid args!\n");	
+	if(ac != 5 && ac != 6)
 		return (0);
- 	}
-    t_philo *philos = malloc(sizeof(t_philo) * ft_atoi(av[1]));
+
+ 	if(ft_parsing(ac, av) == 0)
+		return (0);
+	t_philo *philos = malloc(sizeof(t_philo) * ft_atoi(av[1]));
 	t_data data;
 	data.num_of_philos = ft_atoi(av[1]);
 	data.time_to_die = ft_atoi(av[2]);
 	data.time_to_eat = ft_atoi(av[3]);
 	data.time_to_sleep = ft_atoi(av[4]);
 	if(av[5] != NULL)
-    {
+	{
 		data.num_times_to_eat = ft_atoi(av[5]);
-    }
-    else
-    {
-        data.num_times_to_eat = -1;
-    }
+	}
+	else
+	{
+		data.num_times_to_eat = -1;
+	}
 
 	data.dead = malloc(sizeof(int));
-    if (pthread_mutex_init(&data.dead_lock, NULL) != 0)
-    {
-        return (printf("mutex_init failed\n"), 0);
-    }
+	if (pthread_mutex_init(&data.dead_lock, NULL) != 0)
+	{
+		return (printf("mutex_init failed\n"), 0);
+	}
 	*data.dead = 0;
 	if (pthread_mutex_init(&data.print, NULL) != 0)
 	{
@@ -288,8 +292,8 @@ int main(int ac , char **av)
 		return 0;
 	}
 	
-    int i = 0;
-    pthread_mutex_t *forks;
+	int i = 0;
+	pthread_mutex_t *forks;
 	forks = malloc(sizeof(pthread_mutex_t) * ft_atoi(av[1]));
 	i = 0;
 	while(i < ft_atoi(av[1]))
@@ -306,12 +310,12 @@ int main(int ac , char **av)
 	i = 0;
 	while(i < ft_atoi(av[1]))
 	{
-        
+		
 		philos[i].id = i;
 		philos[i].last_meal = get_current_time();
 		philos[i].eating = 0;
 		philos[i].data = &data;
-        philos[i].finished = 0;
+		philos[i].finished = 0;
 		philos[i].nb_meals_eaten = 0;
 		if(philos[i].id % 2)
 		{
@@ -331,28 +335,28 @@ int main(int ac , char **av)
 	monitor(philos);
 
 	if(*data.dead == 1)
-    {
-        i = 0;
-	    while(i < data.num_of_philos)
-	    {
-		    if (pthread_join(philos[i].thread, NULL) != 0)
-            {
-                printf("pthread_join failed\n");
-                return (0);
-            }
-		    i++;
-	    }
-        if(pthread_mutex_destroy(&data.print) != 0)
-           printf("Failed to destroy print mutex\n");
-       if( pthread_mutex_destroy(&data.last_meal_mutex) != 0)
-          printf("Failed to destroy last meal mutex\n");
-       if( pthread_mutex_destroy(&data.dead_lock) != 0)
-          printf("Failed to destroy dead_lock mutex\n");
-        free(philos);
-        free(data.forks);
-        free(data.dead);
+	{
+		i = 0;
+		while(i < data.num_of_philos)
+		{
+			if (pthread_join(philos[i].thread, NULL) != 0)
+			{
+				printf("pthread_join failed\n");
+				return (0);
+			}
+			i++;
+		}
+		if(pthread_mutex_destroy(&data.print) != 0)
+		   printf("Failed to destroy print mutex\n");
+	   if( pthread_mutex_destroy(&data.last_meal_mutex) != 0)
+		  printf("Failed to destroy last meal mutex\n");
+	   if( pthread_mutex_destroy(&data.dead_lock) != 0)
+		  printf("Failed to destroy dead_lock mutex\n");
+		free(philos);
+		free(data.forks);
+		free(data.dead);
 		return (0);	
-    }
+	}
 
   return (0);
 }
