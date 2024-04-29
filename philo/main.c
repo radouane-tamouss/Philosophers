@@ -6,16 +6,11 @@
 /*   By: rtamouss <rtamouss@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/27 18:18:56 by rtamouss          #+#    #+#             */
-/*   Updated: 2024/04/27 22:25:34 by rtamouss         ###   ########.fr       */
+/*   Updated: 2024/04/29 17:58:37 by rtamouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
-#include <stdio.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
 
 int	main(int ac, char **av)
 {

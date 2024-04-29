@@ -6,13 +6,13 @@
 /*   By: rtamouss <rtamouss@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/27 22:12:48 by rtamouss          #+#    #+#             */
-/*   Updated: 2024/04/27 22:26:22 by rtamouss         ###   ########.fr       */
+/*   Updated: 2024/04/29 17:57:55 by rtamouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-int	ft_atoi(const char *str)
+long	ft_atoi(const char *str)
 {
 	int		i;
 	int		sign;
@@ -60,13 +60,15 @@ int	ft_parsing(int ac, char **av)
 	int	i;
 
 	i = 1;
+	if (ft_check_if_string(av[ac - 1]) == 0)
+		return (printf("Error: Arguments must contain only digits.\n"), 0);
 	if (ft_atoi(av[ac - 1]) == 0 && ac == 6)
 		return (0);
 	while (i < ac)
 	{
 		if (ft_check_if_string(av[i]) == 0)
 			return (printf("Error: Arguments must contain only digits.\n"), 0);
-		if (ft_atoi(av[i]) <= 0)
+		if (ft_atoi(av[i]) <= 0 || ft_atoi(av[i]) > 2147483647)
 		{
 			printf("Error\n");
 			if (av[1] == 0)

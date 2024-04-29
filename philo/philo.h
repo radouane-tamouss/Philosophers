@@ -6,7 +6,7 @@
 /*   By: rtamouss <rtamouss@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/27 22:26:55 by rtamouss          #+#    #+#             */
-/*   Updated: 2024/04/27 22:48:36 by rtamouss         ###   ########.fr       */
+/*   Updated: 2024/04/29 17:53:22 by rtamouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ typedef struct s_philo
 	t_data			*data;
 }	t_philo;
 
-int		ft_atoi(const char *str);
+long	ft_atoi(const char *str);
 int		ft_check_if_string(char *str);
 int		ft_parsing(int ac, char **av);
 void	print_usage(void);
