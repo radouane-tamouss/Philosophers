@@ -6,7 +6,7 @@
 /*   By: rtamouss <rtamouss@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/27 22:16:50 by rtamouss          #+#    #+#             */
-/*   Updated: 2024/04/27 22:36:13 by rtamouss         ###   ########.fr       */
+/*   Updated: 2024/04/29 22:33:07 by rtamouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,6 @@ void	*routine(void *arg)
 		if (ft_print(philo, "is thinking", CYAN) == 1)
 			return (NULL);
 		ft_usleep((philo->data->time_to_die - (get_current_time()
-					- philo->last_meal)) / 2);
 	}
 	return (NULL);
 }
